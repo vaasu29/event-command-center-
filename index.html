@@ -3,228 +3,75 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Mahakumbh Event Operations Command Center</title>
+    <meta http-equiv="refresh" content="8; url=./dashboard.html" />
+    <title>Mahakumbh Command Center</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body>
-    <div class="app-shell">
-      <aside class="rail" aria-label="Operations navigation">
-        <div class="brand-block">
-          <div class="brand-mark" aria-hidden="true">MC</div>
-          <div>
-            <p class="eyebrow">Mahakumbh</p>
-            <h1>Ops Center</h1>
+  <body class="landing-body">
+    <main class="landing-shell">
+      <section class="landing-hero" aria-labelledby="landingTitle">
+        <div class="landing-copy">
+          <p class="eyebrow">Event operations platform</p>
+          <h1 id="landingTitle">Mahakumbh Command Center</h1>
+          <p class="landing-lede">
+            A centralized dashboard for crowd movement, transportation, incidents, volunteers, and resource deployment.
+          </p>
+          <div class="landing-actions">
+            <a class="primary-btn landing-btn" href="./dashboard.html">Enter command center</a>
+            <span class="redirect-note">Auto-opening dashboard in <strong id="redirectCount">8</strong>s</span>
           </div>
         </div>
-        <nav class="rail-nav" aria-label="Sections">
-          <a class="is-active" href="#overview">Overview</a>
-          <a href="#map">Live Map</a>
-          <a href="#incidents">Incidents</a>
-          <a href="#resources">Resources</a>
-          <a href="#insights">Insights</a>
-        </nav>
-        <section class="shift-card">
-          <p class="eyebrow">Active shift</p>
-          <strong>North Sector Command</strong>
-          <span id="liveClock">Loading shift clock</span>
-        </section>
-      </aside>
 
-      <main class="workspace">
-        <header class="topbar">
-          <div>
-            <p class="eyebrow">Unified event operations dashboard</p>
-            <h2>Event Operations Command Center</h2>
+        <div class="landing-board" aria-label="Live operations preview">
+          <div class="preview-top">
+            <span>Live Ops Preview</span>
+            <i></i>
           </div>
-          <div class="topbar-actions">
-            <label class="select-label" for="sectorSelect">Sector</label>
-            <select id="sectorSelect">
-              <option value="all">All sectors</option>
-              <option value="north">North</option>
-              <option value="east">East</option>
-              <option value="south">South</option>
-              <option value="west">West</option>
-              <option value="ghat">Sangam Ghat</option>
-            </select>
-            <button class="primary-btn" id="briefingBtn" type="button">Generate briefing</button>
+          <div class="preview-grid">
+            <article>
+              <span>Risk score</span>
+              <strong>76</strong>
+            </article>
+            <article>
+              <span>Crowd density</span>
+              <strong>68%</strong>
+            </article>
+            <article>
+              <span>Open incidents</span>
+              <strong>4</strong>
+            </article>
+            <article>
+              <span>Coverage</span>
+              <strong>89%</strong>
+            </article>
           </div>
-        </header>
-
-        <section class="status-strip" id="overview" aria-label="Key command metrics">
-          <article class="metric critical">
-            <span>Risk score</span>
-            <strong id="riskScore">0</strong>
-            <small id="riskDelta">Calculating</small>
-          </article>
-          <article class="metric">
-            <span>Crowd density</span>
-            <strong id="crowdDensity">0%</strong>
-            <small>weighted by sector</small>
-          </article>
-          <article class="metric">
-            <span>Open incidents</span>
-            <strong id="openIncidents">0</strong>
-            <small id="criticalIncidents">0 critical</small>
-          </article>
-          <article class="metric">
-            <span>Volunteer coverage</span>
-            <strong id="volunteerCoverage">0%</strong>
-            <small>assigned vs required</small>
-          </article>
-          <article class="metric">
-            <span>Transport load</span>
-            <strong id="transportLoad">0%</strong>
-            <small>buses, shuttles, gates</small>
-          </article>
-        </section>
-
-        <section class="control-row" aria-label="Simulation controls">
-          <div class="segmented" role="group" aria-label="Incident scenario">
-            <button class="is-selected" type="button" data-scenario="normal">Normal</button>
-            <button type="button" data-scenario="surge">Crowd surge</button>
-            <button type="button" data-scenario="medical">Medical spike</button>
-            <button type="button" data-scenario="transport">Transit delay</button>
+          <div class="preview-map">
+            <span class="node node-a"></span>
+            <span class="node node-b"></span>
+            <span class="node node-c"></span>
+            <span class="node node-d"></span>
+            <span class="route route-a"></span>
+            <span class="route route-b"></span>
           </div>
-          <label class="range-control" for="simSpeed">
-            <span>Live feed speed</span>
-            <input id="simSpeed" type="range" min="1" max="5" value="2" />
-          </label>
-          <button class="ghost-btn" id="pauseBtn" type="button">Pause feed</button>
-        </section>
-
-        <section class="main-grid">
-          <article class="panel map-panel" id="map">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Geospatial operations layer</p>
-                <h3>Live Crowd And Resource Map</h3>
-              </div>
-              <div class="legend" aria-label="Map legend">
-                <span><i class="legend-dot calm"></i>Stable</span>
-                <span><i class="legend-dot watch"></i>Watch</span>
-                <span><i class="legend-dot alert"></i>Alert</span>
-              </div>
-            </div>
-            <canvas id="opsMap" width="980" height="560" aria-label="Operational map visualization"></canvas>
-            <div class="map-detail" id="mapDetail">Select a sector to inspect current load.</div>
-          </article>
-
-          <aside class="panel insight-panel" id="insights">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">AI-assisted triage</p>
-                <h3>Actionable Insights</h3>
-              </div>
-            </div>
-            <ol class="insight-list" id="insightList"></ol>
-            <button class="primary-btn full" id="applyTopAction" type="button">Apply top recommendation</button>
-          </aside>
-
-          <article class="panel transport-panel">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Movement and access</p>
-                <h3>Transportation Flow</h3>
-              </div>
-            </div>
-            <div class="bar-list" id="transportBars"></div>
-          </article>
-
-          <article class="panel incident-panel" id="incidents">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Response coordination</p>
-                <h3>Incident Queue</h3>
-              </div>
-              <button class="ghost-btn compact" id="newIncidentBtn" type="button">Add incident</button>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Priority</th>
-                    <th>Location</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>ETA</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="incidentRows"></tbody>
-              </table>
-            </div>
-          </article>
-
-          <article class="panel resource-panel" id="resources">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">People and assets</p>
-                <h3>Resource Deployment</h3>
-              </div>
-            </div>
-            <div class="resource-grid" id="resourceGrid"></div>
-          </article>
-
-          <article class="panel briefing-panel">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Commander note</p>
-                <h3>Auto Briefing</h3>
-              </div>
-            </div>
-            <div class="briefing" id="briefingOutput">
-              Generate a briefing to summarize current operational risk, bottlenecks, and recommended actions.
-            </div>
-          </article>
-        </section>
-      </main>
-    </div>
-
-    <dialog id="incidentDialog">
-      <form method="dialog" class="dialog-form">
-        <div class="panel-header">
-          <div>
-            <p class="eyebrow">Manual report</p>
-            <h3>Add Incident</h3>
+          <div class="preview-alert">
+            <strong>Recommended action</strong>
+            <span>Rebalance volunteers toward Sangam Ghat and open an alternate movement corridor.</span>
           </div>
-          <button class="icon-btn" value="cancel" type="submit" aria-label="Close">x</button>
         </div>
-        <label>
-          Location
-          <select id="incidentLocation">
-            <option>Sangam Ghat</option>
-            <option>North Gate 3</option>
-            <option>East Shuttle Hub</option>
-            <option>Medical Camp B</option>
-            <option>Food Court West</option>
-          </select>
-        </label>
-        <label>
-          Incident type
-          <select id="incidentType">
-            <option>Crowd bottleneck</option>
-            <option>Medical assistance</option>
-            <option>Lost person</option>
-            <option>Transport delay</option>
-            <option>Resource request</option>
-          </select>
-        </label>
-        <label>
-          Priority
-          <select id="incidentPriority">
-            <option>High</option>
-            <option>Medium</option>
-            <option>Critical</option>
-            <option>Low</option>
-          </select>
-        </label>
-        <menu class="dialog-actions">
-          <button class="ghost-btn" value="cancel" type="submit">Cancel</button>
-          <button class="primary-btn" id="saveIncidentBtn" value="default" type="button">Create incident</button>
-        </menu>
-      </form>
-    </dialog>
+      </section>
+    </main>
 
-    <script src="./app.js"></script>
+    <script>
+      const countEl = document.querySelector("#redirectCount");
+      let seconds = 8;
+      const timer = setInterval(() => {
+        seconds -= 1;
+        countEl.textContent = seconds;
+        if (seconds <= 0) {
+          clearInterval(timer);
+          window.location.href = "./dashboard.html";
+        }
+      }, 1000);
+    </script>
   </body>
 </html>

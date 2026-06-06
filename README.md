@@ -27,6 +27,7 @@ The dashboard is designed for event managers who need quick situational awarenes
 
 ## Files
 
-- `index.html` - application structure
+- `index.html` - landing page with redirect into the dashboard
+- `dashboard.html` - command center application structure
 - `styles.css` - responsive dashboard styling
 - `app.js` - live simulation, insights, map rendering, and interactions
