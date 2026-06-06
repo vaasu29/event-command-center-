@@ -1,4 +1,4 @@
-const sectors = [
+let sectors = [
   {
     id: "north",
     name: "North Gate",
@@ -140,6 +140,8 @@ const state = {
   tick: 0,
   selectedMapSector: null,
   recommendationCount: 0,
+  apiConnected: false,
+  latestServerSnapshot: null,
 };
 
 const els = {
@@ -162,12 +164,48 @@ const els = {
   simSpeed: document.querySelector("#simSpeed"),
   incidentDialog: document.querySelector("#incidentDialog"),
   liveClock: document.querySelector("#liveClock"),
+  dataStatus: document.querySelector("#dataStatus"),
 };
 
 const ctx = els.opsMap.getContext("2d");
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+async function apiRequest(path, options = {}) {
+  const response = await fetch(path, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+async function syncSnapshot(advance = false) {
+  const params = new URLSearchParams({
+    sector: state.selectedSector,
+    scenario: state.scenario,
+    speed: String(state.speed),
+    advance: String(advance),
+  });
+
+  try {
+    const snapshot = await apiRequest(`/api/snapshot?${params.toString()}`);
+    sectors = snapshot.sectors;
+    incidents = snapshot.incidents;
+    state.latestServerSnapshot = snapshot;
+    state.apiConnected = true;
+    renderAll();
+    return true;
+  } catch (error) {
+    state.apiConnected = false;
+    return false;
+  }
 }
 
 function getVisibleSectors() {
@@ -188,9 +226,9 @@ function getRiskBand(score) {
 }
 
 function colorForRisk(score) {
-  if (score >= 82) return "#c92a2a";
-  if (score >= 64) return "#b7791f";
-  return "#2f9e44";
+  if (score >= 82) return "#f06060";
+  if (score >= 64) return "#f0c040";
+  return "#4cd080";
 }
 
 function average(items, key) {
@@ -336,7 +374,9 @@ function buildInsights() {
 }
 
 function renderInsights() {
-  const insights = buildInsights();
+  const insights = state.apiConnected && state.latestServerSnapshot
+    ? state.latestServerSnapshot.insights
+    : buildInsights();
   els.insightList.innerHTML = insights
     .map((insight) => `<li><strong>${insight.title}</strong><span>${insight.detail}</span></li>`)
     .join("");
@@ -348,10 +388,10 @@ function drawMap() {
   const height = canvas.height;
   ctx.clearRect(0, 0, width, height);
 
-  ctx.fillStyle = "#edf3f7";
+  ctx.fillStyle = "#1e2028";
   ctx.fillRect(0, 0, width, height);
 
-  ctx.strokeStyle = "#c9d7e2";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
   ctx.lineWidth = 18;
   ctx.lineCap = "round";
   drawPath([
@@ -377,7 +417,7 @@ function drawMap() {
     [870, 420],
   ]);
 
-  ctx.strokeStyle = "#9fc7d0";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
   ctx.lineWidth = 7;
   drawPath([
     [120, 470],
@@ -387,11 +427,11 @@ function drawMap() {
     [850, 450],
   ]);
 
-  ctx.fillStyle = "rgba(37, 99, 235, 0.12)";
+  ctx.fillStyle = "rgba(56, 217, 169, 0.06)";
   ctx.beginPath();
   ctx.ellipse(520, 252, 185, 92, -0.2, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#2563eb";
+  ctx.fillStyle = "rgba(56, 217, 169, 0.5)";
   ctx.font = "700 15px Inter, sans-serif";
   ctx.fillText("Sangam convergence zone", 405, 250);
 
@@ -407,21 +447,21 @@ function drawMap() {
     ctx.arc(sector.x, sector.y, radius, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.fillStyle = "rgba(30, 32, 40, 0.88)";
     ctx.beginPath();
     ctx.arc(sector.x, sector.y, Math.max(22, radius * 0.44), 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = selected ? "#17202a" : "rgba(255,255,255,0.9)";
+    ctx.strokeStyle = selected ? "#4cd080" : "rgba(255,255,255,0.1)";
     ctx.lineWidth = selected ? 5 : 3;
     ctx.stroke();
 
-    ctx.fillStyle = "#17202a";
+    ctx.fillStyle = "#eaf0f9";
     ctx.font = "800 16px Inter, sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(`${sector.crowd}%`, sector.x, sector.y + 5);
 
-    ctx.fillStyle = "#344150";
+    ctx.fillStyle = "rgba(234, 240, 249, 0.6)";
     ctx.font = "700 13px Inter, sans-serif";
     ctx.fillText(sector.name, sector.x, sector.y + radius + 21);
     ctx.globalAlpha = 1;
@@ -449,6 +489,11 @@ function renderMapDetail() {
 }
 
 function renderBriefing() {
+  if (state.apiConnected && state.latestServerSnapshot?.briefing) {
+    els.briefingOutput.textContent = state.latestServerSnapshot.briefing;
+    return;
+  }
+
   const visible = getVisibleSectors();
   const risk = Math.round(visible.reduce((sum, item) => sum + sectorRisk(item), 0) / visible.length);
   const highest = visible.slice().sort((a, b) => sectorRisk(b) - sectorRisk(a))[0];
@@ -482,6 +527,11 @@ function renderClock() {
 }
 
 function renderAll() {
+  if (els.dataStatus) {
+    const source = state.latestServerSnapshot?.database === "mongodb" ? "MongoDB" : "FastAPI";
+    els.dataStatus.textContent = state.apiConnected ? `Live API: ${source}` : "Local simulator";
+    els.dataStatus.classList.toggle("is-live", state.apiConnected);
+  }
   updateMetrics();
   renderBars();
   renderResources();
@@ -531,7 +581,17 @@ function createRandomIncident() {
   incidents = incidents.slice(0, 9);
 }
 
-function acknowledgeIncident(id) {
+async function acknowledgeIncident(id) {
+  if (state.apiConnected) {
+    try {
+      await apiRequest(`/api/incidents/${id}/ack`, { method: "PATCH" });
+      await syncSnapshot(false);
+      return;
+    } catch (error) {
+      state.apiConnected = false;
+    }
+  }
+
   incidents = incidents.map((incident) => {
     if (incident.id !== id) return incident;
     const status = incident.status === "Resolved" ? "Resolved" : "Assigned";
@@ -562,15 +622,43 @@ function improveTransport(id) {
   renderBriefing();
 }
 
-function applyTopRecommendation() {
+async function applyTopRecommendation() {
+  if (state.apiConnected) {
+    try {
+      await apiRequest(`/api/actions/top?sector=${encodeURIComponent(state.selectedSector)}`, {
+        method: "POST",
+      });
+      await syncSnapshot(false);
+      renderBriefing();
+      return;
+    } catch (error) {
+      state.apiConnected = false;
+    }
+  }
+
   const insight = buildInsights()[0];
   if (insight) insight.action();
 }
 
-function saveManualIncident() {
+async function saveManualIncident() {
   const location = document.querySelector("#incidentLocation").value;
   const type = document.querySelector("#incidentType").value;
   const priority = document.querySelector("#incidentPriority").value;
+
+  if (state.apiConnected) {
+    try {
+      await apiRequest("/api/incidents", {
+        method: "POST",
+        body: JSON.stringify({ location, type, priority }),
+      });
+      els.incidentDialog.close();
+      await syncSnapshot(false);
+      return;
+    } catch (error) {
+      state.apiConnected = false;
+    }
+  }
+
   incidents.unshift({
     id: Date.now(),
     priority,
@@ -609,6 +697,7 @@ function setScenario(nextScenario) {
     button.classList.toggle("is-selected", button.dataset.scenario === nextScenario);
   });
   renderAll();
+  syncSnapshot(false);
 }
 
 document.querySelectorAll("[data-scenario]").forEach((button) => {
@@ -619,6 +708,7 @@ els.sectorSelect.addEventListener("change", (event) => {
   state.selectedSector = event.target.value;
   state.selectedMapSector = event.target.value === "all" ? null : event.target.value;
   renderAll();
+  syncSnapshot(false);
 });
 
 els.simSpeed.addEventListener("input", (event) => {
@@ -637,17 +727,25 @@ els.incidentRows.addEventListener("click", (event) => {
 
 document.querySelector("#newIncidentBtn").addEventListener("click", () => els.incidentDialog.showModal());
 document.querySelector("#saveIncidentBtn").addEventListener("click", saveManualIncident);
-document.querySelector("#briefingBtn").addEventListener("click", renderBriefing);
+document.querySelector("#briefingBtn").addEventListener("click", async () => {
+  await syncSnapshot(false);
+  renderBriefing();
+});
 document.querySelector("#applyTopAction").addEventListener("click", applyTopRecommendation);
 els.opsMap.addEventListener("click", handleCanvasClick);
 
-setInterval(() => {
+setInterval(async () => {
   if (state.paused) return;
   state.tick += 1;
-  for (let i = 0; i < state.speed; i += 1) mutateLiveData();
-  renderAll();
+  const synced = await syncSnapshot(true);
+  if (!synced) {
+    for (let i = 0; i < state.speed; i += 1) mutateLiveData();
+    renderAll();
+  }
 }, 2600);
 
 setInterval(renderClock, 30000);
 renderClock();
-renderAll();
+syncSnapshot(false).then((synced) => {
+  if (!synced) renderAll();
+});

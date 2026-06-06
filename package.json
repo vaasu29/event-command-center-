@@ -1,0 +1,19 @@
+{
+  "name": "event-command-center",
+  "version": "1.0.0",
+  "description": "Node.js frontend server for the Mahakumbh Event Operations Command Center.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "frontend": "node server.js",
+    "backend": "python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000"
+  },
+  "keywords": [
+    "event-operations",
+    "fastapi",
+    "mongodb",
+    "nodejs"
+  ],
+  "author": "vaasu29",
+  "license": "MIT"
+}

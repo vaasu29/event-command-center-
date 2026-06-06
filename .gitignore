@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.env
+backend/local_state.json
+node_modules/

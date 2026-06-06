@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="refresh" content="8; url=./dashboard.html" />
     <title>Mahakumbh Command Center</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -18,7 +17,6 @@
           </p>
           <div class="landing-actions">
             <a class="primary-btn landing-btn" href="./dashboard.html">Enter command center</a>
-            <span class="redirect-note">Auto-opening dashboard in <strong id="redirectCount">8</strong>s</span>
           </div>
         </div>
 
@@ -61,17 +59,5 @@
       </section>
     </main>
 
-    <script>
-      const countEl = document.querySelector("#redirectCount");
-      let seconds = 8;
-      const timer = setInterval(() => {
-        seconds -= 1;
-        countEl.textContent = seconds;
-        if (seconds <= 0) {
-          clearInterval(timer);
-          window.location.href = "./dashboard.html";
-        }
-      }, 1000);
-    </script>
   </body>
 </html>
